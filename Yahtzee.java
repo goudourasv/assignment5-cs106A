@@ -27,6 +27,7 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 
 	private void playGame() {
 		for(int i=1; i<= nPlayers; i++) {
+			display.printMessage(playerNames[i-1]+ "s turn! Click  \" Roll dice \"  button to roll the dice.");
 			display.waitForPlayerToClickRoll(i);
 		}
 
@@ -36,6 +37,28 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 		}
 
 		display.displayDice(currentDice);
+		display.printMessage("Select the dice you want to re-roll and click \" Roll Again\" ");
+		display.waitForPlayerToSelectDice();
+
+
+		for(int k=0; k<=currentDice.length-1; k++) {
+			if (display.isDieSelected(k)) {
+				currentDice[k] = rgen.nextInt(1, 6);
+			}
+			display.displayDice(currentDice);
+			display.printMessage("Select the dice you want to re-roll and click \" Roll Again\" ");
+		}
+
+
+		for(int k=0; k<=currentDice.length-1; k++){
+			if(display.isDieSelected(k)) {
+				currentDice[k] = rgen.nextInt(1,6);
+			}
+			display.displayDice(currentDice);
+		}
+		display.printMessage("Select a category for this roll ");
+		display.waitForPlayerToSelectCategory();
+
 
 
 	}
