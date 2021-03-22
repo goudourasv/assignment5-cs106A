@@ -23,28 +23,26 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         for (int i = 1; i <= nPlayers; i++) {
             playerNames[i - 1] = dialog.readLine("Enter name for player " + i);
         }
+        playerScore = new Integer[N_CATEGORIES][nPlayers];
         display = new YahtzeeDisplay(getGCanvas(), playerNames);
         playGame();
     }
 
     private void playGame() {
-
-//        for(int i=1; i<= nPlayers; i++){
-//            player =i;
-//            playTurn(i);
-//        }
         for(int i =0; i<=12; i++) {
-            playTurn(1);
-
+            for(int j=1; j<= nPlayers; j++){
+                playTurn(j);
+            }
         }
-        calculateScores(true);
-        displayFinalPlayerScore();
-
+        for(int i=1; i<=nPlayers; i++) {
+            calculateScores(true,i);
+            displayFinalPlayerScore(i);
+        }
     }
 
     private void playTurn(int player) {
         display.printMessage(playerNames[player - 1] + "'s turn! Click  \" Roll dice \"  button to roll the dice.");
-        display.waitForPlayerToClickRoll(1);
+        display.waitForPlayerToClickRoll(player);
 
 //        rgen.setSeed(1);
         for (int i = 0; i <= currentDice.length - 1; i++) {
@@ -59,8 +57,8 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
             if (display.isDieSelected(i)==true) {
                 currentDice[i] = rgen.nextInt(1, 6);
             }
-            display.displayDice(currentDice);
         }
+        display.displayDice(currentDice);
         display.printMessage("Select the dice you want to re-roll and click \" Roll Again\" ");
         display.waitForPlayerToSelectDice();
 
@@ -69,8 +67,8 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
             if (display.isDieSelected(i)==true) {
                 currentDice[i] = rgen.nextInt(1, 6);
             }
-            display.displayDice(currentDice);
         }
+        display.displayDice(currentDice);
         display.printMessage("Select a category for this roll ");
 
 
@@ -78,24 +76,90 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         int score = setPointsPerCategory(selectedCategory, currentDice);
         boolean matchCategory = YahtzeeMagicStub.checkCategory(currentDice, selectedCategory);
 
-        setScore(matchCategory, selectedCategory, score);
+        setScore(matchCategory, selectedCategory, score,player);
 
         //TODO check category method
-        display.updateScorecard(selectedCategory, 1, playerScore[selectedCategory-1]);
-        calculateScores(false);
-        displayTotalPlayerScore();
+        display.updateScorecard(selectedCategory, player, playerScore[selectedCategory-1][player-1]);
+        calculateScores(false,player);
+        displayTotalPlayerScore(player);
     }
 
-    private void displayTotalPlayerScore() {
-        display.updateScorecard(TOTAL, 1, playerScore[TOTAL-1]);
+    private int calculateUpperScore(int player) {
+        int upperScore= 0;
+        for(int i=0; i<=5; i++) {
+            if(playerScore[i][player-1]!=null) {
+                upperScore += playerScore[i][player-1];
+            }
+        }
+        return upperScore;
     }
 
-    private void setScore(boolean matchCategory, int selectedCategory, int score) {
+    private int checkUpperScoreBonus(int upperScore) {
+        int upperBonus = 0;
+        if (upperScore >= 63) {
+            upperBonus = 35;
+        }
+        return upperBonus;
+    }
+
+    private int calculateLowerScore(int player) {
+        int lowerScore = 0;
+        for(int i=8; i<=14; i++) {
+            if (playerScore[i][player-1] != null) {
+                lowerScore += playerScore[i][player-1];
+            }
+        }
+        return lowerScore;
+    }
+
+    private int calculateTotalPlayerScore(int lowerScore,int upperScore,int upperBonus ) {
+        int total =upperScore + lowerScore + upperBonus;
+        return total;
+    }
+
+    private void updateSumsInScore(int upperScore,int lowerScore,int upperBonus,int total,int player) {
+        playerScore[UPPER_SCORE-1][player-1] = upperScore;
+        playerScore[LOWER_SCORE-1][player-1] = lowerScore;
+        playerScore[UPPER_BONUS-1][player-1] = upperBonus;
+        playerScore[TOTAL-1][player-1] = total;
+
+    }
+
+    private void calculateScores(boolean includeBonus,int player){
+        int upperBonus =0;
+        int upperScore = calculateUpperScore(player);
+        int lowerScore = calculateLowerScore(player);
+        if (includeBonus){
+            upperBonus = checkUpperScoreBonus(upperScore);
+        }
+        int total = calculateTotalPlayerScore(lowerScore,upperScore,upperBonus);
+
+        updateSumsInScore(upperScore,lowerScore,upperBonus,total,player);
+    }
+    
+    private void displayTotalPlayerScore(int player) {
+        display.updateScorecard(TOTAL, player, playerScore[TOTAL-1][player-1]);
+    }
+
+    private void displayFinalPlayerScore(int player) {
+        display.updateScorecard( UPPER_SCORE, player, playerScore[UPPER_SCORE-1][player-1]);
+        display.updateScorecard( LOWER_SCORE, player, playerScore[LOWER_SCORE-1][player-1]);
+        display.updateScorecard( UPPER_BONUS, player, playerScore[UPPER_BONUS-1][player-1]);
+        display.updateScorecard( TOTAL, player, playerScore[TOTAL-1][player-1]);
+    }
+
+
+
+
+
+
+
+    private void setScore(boolean matchCategory, int selectedCategory, int score,int player) {
         if (matchCategory == true) {
-            playerScore[selectedCategory-1] = score;
+            playerScore[selectedCategory-1][player-1] = score;
 
         } else {
-            playerScore[selectedCategory-1] = 0;
+            playerScore[selectedCategory-1][player-1] = 0;
         }
     }
 
@@ -161,68 +225,11 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         return sum;
     }
 
-    private void displayFinalPlayerScore() {
-        display.updateScorecard( UPPER_SCORE, 1, playerScore[UPPER_SCORE-1]);
-        display.updateScorecard( LOWER_SCORE, 1, playerScore[LOWER_SCORE-1]);
-        display.updateScorecard( UPPER_BONUS, 1, playerScore[UPPER_BONUS-1]);
-        display.updateScorecard( TOTAL, 1, playerScore[TOTAL-1]);
-    }
-    private void updateSumsInScore(int upperScore,int lowerScore,int upperBonus,int total) {
-        playerScore[UPPER_SCORE-1] = upperScore;
-        playerScore[LOWER_SCORE-1] = lowerScore;
-        playerScore[UPPER_BONUS-1] = upperBonus;
-        playerScore[TOTAL-1] = total;
-
-    }
-    private void calculateScores(boolean includeBonus){
-        int upperBonus =0;
-        int upperScore = calculateUpperScore();
-        int lowerScore = calculateLowerScore();
-        if (includeBonus){
-            upperBonus = checkUpperScoreBonus(upperScore);
-        }
-        int total = calculateTotalPlayerScore(lowerScore,upperScore,upperBonus);
-
-        updateSumsInScore(upperScore,lowerScore,upperBonus,total);
-
-    }
-    private int calculateLowerScore() {
-        int lowerScore = 0;
-        for(int i=8; i<=14; i++) {
-            lowerScore = playerScore[i];
-        }
-        return lowerScore;
-    }
-
-    private int calculateUpperScore() {
-        int upperScore= 0;
-        for(int i=0; i<=5; i++) {
-            upperScore += playerScore[i];
-        }
-        return upperScore;
-    }
-
-    private int checkUpperScoreBonus(int upperScore) {
-        int upperBonus = 0;
-        if (upperScore >= 63) {
-            upperBonus = 35;
-        }
-        return upperBonus;
-    }
-
-    private int calculateTotalPlayerScore(int lowerScore,int upperScore,int upperBonus ) {
-        int total =0;
-        total =upperScore + lowerScore + upperBonus;
-        return total;
-    }
-
-
     /* Private instance variables */
 
-    private Integer[] playerScore = new Integer[N_CATEGORIES];
+    private Integer[][] playerScore;
     private int[] currentDice = new int[N_DICE];
     private int nPlayers;
-    private int player;
     private String[] playerNames;
     private YahtzeeDisplay display;
     private RandomGenerator rgen = new RandomGenerator();
