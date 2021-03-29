@@ -75,10 +75,10 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         int selectedCategory = display.waitForPlayerToSelectCategory();
         int score = setPointsPerCategory(selectedCategory, currentDice);
         boolean matchCategory = YahtzeeMagicStub.checkCategory(currentDice, selectedCategory);
+        //TODO check category method
 
         setScore(matchCategory, selectedCategory, score,player);
 
-        //TODO check category method
         display.updateScorecard(selectedCategory, player, playerScore[selectedCategory-1][player-1]);
         calculateScores(false,player);
         displayTotalPlayerScore(player);
@@ -136,7 +136,7 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 
         updateSumsInScore(upperScore,lowerScore,upperBonus,total,player);
     }
-    
+
     private void displayTotalPlayerScore(int player) {
         display.updateScorecard(TOTAL, player, playerScore[TOTAL-1][player-1]);
     }
@@ -147,11 +147,6 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         display.updateScorecard( UPPER_BONUS, player, playerScore[UPPER_BONUS-1][player-1]);
         display.updateScorecard( TOTAL, player, playerScore[TOTAL-1][player-1]);
     }
-
-
-
-
-
 
 
     private void setScore(boolean matchCategory, int selectedCategory, int score,int player) {
